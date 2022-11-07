@@ -1,0 +1,83 @@
+
+.main-footer{
+    background-color: #2b669a;
+    color: white;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
+}
+
+.content-wrapper{
+    margin-bottom: 50px;
+}
+
+.datepicker-dropdown {z-index: 1151 !important;}
+
+.sub_menu_links > a {
+    color: white;
+}
+
+.select2-container--default {
+
+    display: block;
+   
+}
+
+
+.form-horizontal > .form-group > label {
+
+    text-align: left;
+}
+
+ .collapse-title {
+    display: block;
+    cursor: pointer !important;
+}
+
+#spinner_div {
+    color: #2b669a;
+}
+
+.modal-header{
+    background-color: #2b669a;
+    color: #FFFFFF;
+}
+
+.gallery-items {
+    cursor: pointer;
+}
+
+.modal-title{
+    text-align: center !important;
+}
+
+
+.text_styles{
+    background-color: #2b669a;
+    color: #FFFFFF;
+}
+
+.dropdown-menu {
+    min-width: 0px;
+}
+
+.dataTable{
+    font-size: 12.5px;
+}
+
+.blink {
+    animation: blink 2s steps(5, start) infinite;
+    -webkit-animation: blink 1s steps(5, start) infinite;
+}
+@keyframes blink {
+    to {
+        visibility: hidden;
+    }
+}
+@-webkit-keyframes blink {
+    to {
+        visibility: hidden;
+    }
+}

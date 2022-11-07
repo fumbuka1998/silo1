@@ -1,0 +1,91 @@
+*************************************************************************************************
+22/6/2016
+*************************************************************************************************
+1. Project_tools_budgets table was added consider relationships;
+2. Task_tools_budgets table was added consider relationships;
+3. Material_item_categories table was added consider relationships;
+4. Column category_id was added to table material items referencing material_item_categories
+
+*************************************************************************************************
+23/6/2016
+*************************************************************************************************
+
+1. Table measurement_units was added
+2. Column unit_id was added to material_items table and referenced to measurement_units
+
+**************************************************************************************************
+24/06/2016
+**************************************************************************************************
+
+1. Table material_stocks was added, it has some relationships remember;
+2. Table opening stocks was added, it has some relationships too hommie
+
+****************************************************************************************************
+27/06/2016
+****************************************************************************************************
+
+1. Table tool_location_history was added, it has some relationships remember;
+
+
+****************************************************************************************************
+2/7/2016
+*****************************************************************************************************
+
+1. Colums project ID in inventory_locations provided with a UNIQUE INDEX;
+2: Table external_material_transfers was added, it got plenty of relationships, Mind That ;)
+3: Table external_material_transfer_items was added, it got plenty of relationships, Mind That ;)
+
+*****************************************************************************************************
+4/7/2016
+*****************************************************************************************************
+1. Table goods_received_notes was added, including its relationships
+2. Table goods_received_note_stock_items was added, including its relationships
+
+*****************************************************************************************************
+5/7/2016
+******************************************************************************************************
+1. Record Company Settings was added in permissions table
+2. Record Administrative Actions was added in permissions table
+
+
+*****************************************************************************************************
+6/7/2016
+******************************************************************************************************
+1. Table internal_material_transfers was added;
+2. Table internal_material_transfer_items was added;
+
+
+*****************************************************************************************************
+8/7/2016
+******************************************************************************************************
+1. Table requisitions was added;
+2. Table requisition_material_items was added;
+3. Table requisition_tools_items was added;
+
+*****************************************************************************************************
+12/7/2016
+******************************************************************************************************
+1. Table purchase_orders was added;
+2. Table purchase_order_material_items was added;
+2. Table purchase_order_tool_items was added;
+
+*****************************************************************************************************
+13/7/2016
+******************************************************************************************************
+
+1. Table goods_received_notes columns were changed;
+2. Table external_material_transfers columns were changed;
+*****************************************************************************************************
+13/7/2016
+******************************************************************************************************
+1. Table goods_received_notes columns were changed;
+2. Table external_material_transfers columns were changed;
+
+*****************************************************************************************************
+19/7/2016
+******************************************************************************************************
+
+1. Table project_team_members columns was added;
+2. Table requisitions columns were changed;
+2. Table requisition_tools_items were changed;
+

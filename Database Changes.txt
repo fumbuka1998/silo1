@@ -1,0 +1,7 @@
+#02062022
+
+ALTER TABLE `company_details` ADD `corporate_color` VARCHAR(50) NULL AFTER `tagline`;
+
+ALTER TABLE `system_logs` CHANGE `action` `action` VARCHAR(300) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT 'Unknown';
+
+ALTER TABLE `accounts` CHANGE `account_code` `account_code` VARCHAR(50) NULL DEFAULT NULL;

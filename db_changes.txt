@@ -1,0 +1,46 @@
+CREATE TABLE `purchase_order_material_item_grn_items` (
+ `id` int(11) NOT NULL AUTO_INCREMENT,
+ `goods_received_note_item_id` int(11) NOT NULL,
+ `purchase_order_material_item_id` int(11) NOT NULL,
+ PRIMARY KEY (`id`),
+ KEY `goods_received_note_item_id` (`goods_received_note_item_id`),
+ KEY `purchase_order_material_item_id` (`purchase_order_material_item_id`),
+ CONSTRAINT `purchase_order_material_item_grn_items_ibfk_1` FOREIGN KEY (`goods_received_note_item_id`) REFERENCES `goods_received_note_material_stock_items` (`item_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+ CONSTRAINT `purchase_order_material_item_grn_items_ibfk_2` FOREIGN KEY (`purchase_order_material_item_id`) REFERENCES `purchase_order_material_items` (`item_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+DELETE FROM asset_transfers;
+DELETE FROM assets;
+ALTER TABLE `assets` CHANGE `asset_name` `asset_item_id` INT(11) NOT NULL, CHANGE `status` `status` ENUM('active','inactive','disposed') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL;
+ALTER TABLE assets DROP FOREIGN KEY assets_ibfk_1;
+ALTER TABLE `assets` ADD FOREIGN KEY (`asset_item_id`) REFERENCES `asset_items`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `assets` DROP `asset_group_id`;
+DROP TABLE `asset_accounts`;
+ALTER TABLE `assets` ADD `account_id` INT NOT NULL AFTER `asset_code`;
+ALTER TABLE `assets` ADD FOREIGN KEY (`account_id`) REFERENCES `accounts`(`account_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+1/2/2018
+
+ALTER TABLE `asset_groups` CHANGE `group_nature_id` `project_nature_id` INT(11) NULL DEFAULT NULL;
+ALTER TABLE `asset_groups` DROP FOREIGN KEY `asset_groups_ibfk_2`; ALTER TABLE `asset_groups` ADD CONSTRAINT `asset_groups_ibfk_2` FOREIGN KEY (`project_nature_id`) REFERENCES `project_categories`(`category_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `project_categories` CHANGE `description` `description` TEXT CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL;
+ALTER TABLE `asset_groups` CHANGE `description` `description` TEXT CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL;
+
+2/2/2018
+
+ALTER TABLE `asset_items` ADD `created_by` INT NOT NULL AFTER `description`, ADD `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `created_by`;
+ALTER TABLE `asset_items` ADD FOREIGN KEY (`created_by`) REFERENCES `employees`(`employee_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+6/2/2018
+
+INSERT INTO `permissions` (`permission_id`, `name`) VALUES (NULL, 'All Projects');
+
+ALTER TABLE `projects` ADD `created_by` INT NOT NULL DEFAULT '1' AFTER `site_agent_account_id`, ADD `created_at` TIMESTAMP NOT NULL AFTER `created_by`;
+ALTER TABLE `projects` ADD FOREIGN KEY (`created_by`) REFERENCES `employees`(`employee_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+12/2/2018
+
+ALTER TABLE assets DROP FOREIGN KEY assets_ibfk_2;
+ALTER TABLE `assets` DROP `sub_location_id`;
+
