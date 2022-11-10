@@ -2,6 +2,10 @@
 require 'vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use \PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 
 class Inventory extends MY_Controller
@@ -1158,6 +1162,10 @@ class Inventory extends MY_Controller
         echo json_encode($json);
     }
 
+
+
+   
+
     private function serialize_material_item_category_ids($categories)
     {
         $ids = [];
@@ -1172,13 +1180,104 @@ class Inventory extends MY_Controller
     }
 
     public function download_material_registration_excel_template(){
+
+        $this->load->model(['material_item_category', 'measurement_unit']);
+        $uom_dropdown = $this->measurement_unit->excel_dropdown_list();
+        $categories = $this->material_item_category->get(0, 0, ['tree_level' => '1']);
+
+        //my styles goes here
+       
+        //end of style
+        $spreadsheet = new Spreadsheet();
+        $active_sheet = $spreadsheet->getActiveSheet();
+        $active_sheet->setCellValue('A1', 'UNCATEGORIZED');
+        $active_sheet->setCellValue('A2', 'Material Item');
+        $active_sheet->setCellValue('B2', 'Measurement Unit');
+        $active_sheet->setCellValue('C2', 'Part Number');
+        $active_sheet->setCellValue('D2', 'Description');
+
+        $active_sheet->setTitle('Material Registration');
+
+                $category_column_index = 'E';
+                $category_ids   = $this->serialize_material_item_category_ids($categories);
+
+
+        
+                $category_ids = new RecursiveIteratorIterator(new RecursiveArrayIterator($category_ids));
+        
+                foreach ($category_ids as $category_id) {
+                    $category_column_index++;
+                    $category_start_column = $category_column_index;
+                    $hex_color = '9bc4c6';
+                    $category = new Material_item_category();
+                    $category->load($category_id);
+                    $hex_color = dechex(hexdec($hex_color) + (96 * $category->tree_level / 2));
+                    $font_size = 18 - ($category->tree_level);
+        
+                    $active_sheet->setCellValue($category_column_index . '1', $category_id);
+                    $active_sheet->setCellValue($category_column_index . '2', 'Item Name');
+                    $category_column_index++;
+                    $active_sheet->setCellValue($category_column_index . '1', $category->category_name);
+                    $active_sheet->setCellValue($category_column_index . '2', 'Measurement Unit');
+        
+                   
+        
+        
+                    $category_column_index++;
+                    $active_sheet->setCellValue($category_column_index . '1', 'LEVEL ' . $category->tree_level);
+                    $active_sheet->setCellValue($category_column_index . '2', 'Part Number');
+                    $category_column_index++;
+                    $active_sheet->setCellValue($category_column_index . '2', 'Description');
+        
+                    $category_end_column = $category_column_index;
+
+
+                }
+                for ($col_index = 'A'; $col_index !== $category_column_index; $col_index++) {
+                    $active_sheet->getColumnDimension($col_index)->setAutoSize(true);
+                }
+
+        $sheet_dimension = $active_sheet->getHighestRowAndColumn();
+
+        //my styles are
+        $styleArray = array(
+            'borders' => array(
+                'outline' => array(
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => array('rgb' => 'FFFFFF'),
+                ),
+            ),
+            'fill' => array(
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => array('argb' => '538ED5')
+            )
+        );
+        $spreadsheet->getActiveSheet()->getStyle('A1:D2')->applyFromArray($styleArray);
+
+        //Freeze the fixed panes
+        $active_sheet->freezePane('A3');
+
+
+
+
+        $writer = new Xlsx($spreadsheet);
+
+        $filename = 'Material Items Registration Template';
+
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="'. $filename .'.xlsx"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+
+    }
+
+    public function download_material_registration_excel_template1(){
         //my trial codes
         // $this->load->library('excel');
         // $this->excel->setActiveSheetIndex(0);
 
         // $active_sheet = $this->excel->getActiveSheet();
         // $active_sheet->setTitle('Material Registration by me');
-
 
 
         $this->load->model('material_item_category');
@@ -1250,7 +1349,7 @@ class Inventory extends MY_Controller
         // $writer->save('php://output');
     }
 
-    public function download_material_registration_excel_template1()
+    public function download_material_registration_excel_template2()
     {
 
         //load our new PHPExcel library
@@ -1415,8 +1514,90 @@ class Inventory extends MY_Controller
         ob_end_clean();
         $objWriter->save('php://output');
     }
+    public function upload_material_registration_excel(){
+        
+       $upload_file = $_FILES['file']['name'];
 
-    public function upload_material_registration_excel()
+      
+        $extension = pathinfo($upload_file)['extension'];
+
+        if($extension == 'Csv')
+        {
+            $reader = new \PhpOffice\PhpSpreadsheet\Reader\Csv();
+        }
+        elseif($extension=='Xls')
+        {
+            $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
+        }
+        else{
+            $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        }
+
+        $spreadsheet = $reader->load($_FILES['file']['tmp_name']);
+
+        // print_r($spreadsheet);
+        // exit();
+
+        $active_sheet = $spreadsheet->getActiveSheet();
+       
+            $sheet_dimension = $active_sheet->getHighestRowAndColumn();
+
+            $this->load->model(['measurement_unit', 'material_item']);
+            $measurement_units = $this->measurement_unit->get();
+            foreach ($measurement_units as $measurement_unit) {
+                $uom_ids[$measurement_unit->symbol] = $measurement_unit->{$measurement_unit::DB_TABLE_PK};
+            }
+
+            //Uncategorized Material Items
+
+            for ($row_index = 3; $row_index <= $sheet_dimension['row']; $row_index++) {
+                $item_name = trim($active_sheet->getCell("A" . $row_index)->getFormattedValue());
+                // echo $item_name;
+                // exit();
+                $symbol = $active_sheet->getCell("B" . $row_index)->getFormattedValue();
+                $uom_id = isset($uom_ids[$symbol]) ? $uom_ids[$symbol] : null;
+                if ($item_name != '' /* && !is_null($uom_id) */) {
+                    $material_item = new Material_item();
+                    $material_item->item_name = $item_name;
+                    $material_item->unit_id = $uom_id;
+                    $material_item->category_id = null;
+                    $material_item->part_number = $active_sheet->getCell("C" . $row_index)->getFormattedValue();
+                    $material_item->description = trim($active_sheet->getCell("D" . $row_index)->getFormattedValue());
+                    $material_item->save();
+                }
+            }
+
+            //Categorized material_items
+
+            $MAX_COL_INDEX = Coordinate::columnIndexFromString($sheet_dimension['column']);
+
+            for ($index = Coordinate::columnIndexFromString('E'); $index < $MAX_COL_INDEX; $index = $index + 5) {
+                $col = Coordinate::stringFromColumnIndex($index);
+                $uom_col = Coordinate::stringFromColumnIndex($index + 1);
+                $part_number_col = Coordinate::stringFromColumnIndex($index + 2);
+                $description_col = Coordinate::stringFromColumnIndex($index + 3);
+                $category_id = $active_sheet->getCell($col . '1')->getFormattedValue();
+
+                for ($row_index = 3; $row_index <= $sheet_dimension['row']; $row_index++) {
+                    $item_name = trim($active_sheet->getCell($col . $row_index)->getFormattedValue());
+                    $symbol = $active_sheet->getCell($uom_col . $row_index)->getFormattedValue();
+                    $uom_id = isset($uom_ids[$symbol]) ? $uom_ids[$symbol] : null;
+                    if ($item_name != '' && !is_null($uom_id)) {
+                        $material_item = new Material_item();
+                        $material_item->item_name = $item_name;
+                        $material_item->unit_id = $uom_id;
+                        $material_item->category_id = $category_id;
+                        $material_item->part_number = $active_sheet->getCell($part_number_col . $row_index)->getFormattedValue();
+                        $material_item->description = trim($active_sheet->getCell($description_col . $row_index)->getFormattedValue());
+                        $material_item->save();
+                    }
+                }
+            }
+        
+
+    }
+
+    public function upload_material_registration_excel1()
     {
         $this->load->library('excel');
         $file = $_FILES['file']['tmp_name'];

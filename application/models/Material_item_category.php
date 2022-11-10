@@ -4,7 +4,7 @@ class Material_item_category extends MY_Model{
     
     const DB_TABLE = 'material_item_categories';
     const DB_TABLE_PK = 'category_id';
-
+    
     public $category_name;
     public $description;
     public $parent_category_id;
