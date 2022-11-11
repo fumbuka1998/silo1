@@ -4,6 +4,10 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Borders;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use \PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
@@ -1180,14 +1184,36 @@ class Inventory extends MY_Controller
     }
 
     public function download_material_registration_excel_template(){
+        //load our new PHPExcel library
+        $this->load->library('excel');
+        $this->excel->setActiveSheetIndex(0);
+
+        $active_sheet = $this->excel->getActiveSheet();
+        //$active_sheet->setTitle('Material Registration');
+
 
         $this->load->model(['material_item_category', 'measurement_unit']);
         $uom_dropdown = $this->measurement_unit->excel_dropdown_list();
         $categories = $this->material_item_category->get(0, 0, ['tree_level' => '1']);
+        $hex_color = 'pink';
 
-        //my styles goes here
-       
-        //end of style
+        $active_sheet->getStyle('A1:D202')->applyFromArray([
+            'fill' => [
+                'type' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'color' => ['rgb' => $hex_color],
+            ]
+        ]);
+
+        $style['column_title'] = [
+            'fill' => [
+                'type' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'color' => ['rgb' => '6fa8dc'],
+            ]
+        ];
+
+        $active_sheet->getStyle('A2:D2')->applyFromArray($style['column_title']);
+        
+
         $spreadsheet = new Spreadsheet();
         $active_sheet = $spreadsheet->getActiveSheet();
         $active_sheet->setCellValue('A1', 'UNCATEGORIZED');
@@ -1202,7 +1228,6 @@ class Inventory extends MY_Controller
                 $category_ids   = $this->serialize_material_item_category_ids($categories);
 
 
-        
                 $category_ids = new RecursiveIteratorIterator(new RecursiveArrayIterator($category_ids));
         
                 foreach ($category_ids as $category_id) {
@@ -1220,9 +1245,6 @@ class Inventory extends MY_Controller
                     $active_sheet->setCellValue($category_column_index . '1', $category->category_name);
                     $active_sheet->setCellValue($category_column_index . '2', 'Measurement Unit');
         
-                   
-        
-        
                     $category_column_index++;
                     $active_sheet->setCellValue($category_column_index . '1', 'LEVEL ' . $category->tree_level);
                     $active_sheet->setCellValue($category_column_index . '2', 'Part Number');
@@ -1230,35 +1252,85 @@ class Inventory extends MY_Controller
                     $active_sheet->setCellValue($category_column_index . '2', 'Description');
         
                     $category_end_column = $category_column_index;
+                    $category_column_index++;
 
+                    $category_end_column = $category_column_index;
+            $active_sheet->getStyle($category_start_column . '1:' . $category_end_column . '202')->applyFromArray([
+                'fill' => [
+                    'type' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'color' => ['rgb' => $hex_color],
+                ]
+            ]);
+            $active_sheet->getStyle($category_start_column . '1:' . $category_end_column . '1')->applyFromArray([
+                'font' => [
+                    'size' => $font_size
+                ]
+            ]);
+
+            $active_sheet->getStyle($category_start_column . '2:' . $category_end_column . '2')->applyFromArray($style['column_title']);
+            $category_column_index++;
+
+            //Unprotect Editable Cells
+            $active_sheet->getStyle($category_start_column . '3:' . $category_end_column . '202');
 
                 }
+
                 for ($col_index = 'A'; $col_index !== $category_column_index; $col_index++) {
                     $active_sheet->getColumnDimension($col_index)->setAutoSize(true);
                 }
 
-        $sheet_dimension = $active_sheet->getHighestRowAndColumn();
+        // $category_column_index++;        
+        // $sheet_dimension = $active_sheet->getHighestRowAndColumn();
 
         //my styles are
-        $styleArray = array(
+        // $styleArray = array(
+            
+            
+        //     'borders' => [
+        //         'diagonalDirection' => Borders::DIAGONAL_BOTH,
+        //         'allBorders' => [
+        //             'borderStyle' => Border::BORDER_THIN,
+        //         ],
+        //     ],
+        //     'fill' => [
+        //         'fillType' => Fill::FILL_GRADIENT_LINEAR,
+        //         'startColor' => [
+        //             'argb' => 'yellow',
+        //         ],
+        //         'endColor' => [
+        //             'argb' => 'white',
+        //         ],
+        //     ],
+        // );
+        // $spreadsheet->getActiveSheet()->getStyle('A2:ZZ100')->applyFromArray($styleArray);
+        //$spreadsheet->getActiveSheet()->getStyle('F2:I2')->applyFromArray($styleArray);
+        //$spreadsheet->getActiveSheet()->getStyle('J2:M2')->applyFromArray($styleArray);
+        //$spreadsheet->getActiveSheet()->getStyle('N2:')->applyFromArray($styleArray);
+
+        $active_sheet->getStyle('A1:' . $category_column_index . '202')->applyFromArray([
             'borders' => array(
-                'outline' => array(
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => array('rgb' => 'FFFFFF'),
-                ),
-            ),
-            'fill' => array(
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => array('argb' => '538ED5')
+                'allborders' => array(
+                    'style' => PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+                )
             )
-        );
-        $spreadsheet->getActiveSheet()->getStyle('A1:D2')->applyFromArray($styleArray);
+        ]);
+
+        $style['column_heading'] = [
+            'font' => [
+                'bold'  => true,
+                'italic' => true
+            ]
+        ];
+
+        //Start Initial column headers
+        $active_sheet->getStyle('A1:' . $category_column_index . '2')->applyFromArray($style['column_heading']);
+
+        $sheet_dimension = $active_sheet->getHighestRowAndColumn();
+
+
 
         //Freeze the fixed panes
         $active_sheet->freezePane('A3');
-
-
-
 
         $writer = new Xlsx($spreadsheet);
 
@@ -1343,7 +1415,7 @@ class Inventory extends MY_Controller
         // $writer = new Xlsx($spreadsheet);
         // $filename = 'name-of-the-generated-file';
 
-        // header('Content-Type: application/vnd.ms-excel');
+        // header('Content-Type: application/vnd.ms-exc$active_sheet = $this->excel->getActiveSheet();$active_sheet = $this->excel->getActiveSheet();$active_sheet = $this->excel->getActiveSheet();$active_sheet = $this->excel->getActiveSheet();el');
         // header('Content-Disposition: attachment;filename="'. $filename .'.xlsx"');
         // header('Cache-Control: max-age=0');
         // $writer->save('php://output');
