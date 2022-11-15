@@ -1190,6 +1190,9 @@ class Inventory extends MY_Controller
 
         $active_sheet = $this->excel->getActiveSheet();
         //$active_sheet->setTitle('Material Registration');
+        //Protect Sheet
+        $active_sheet->getProtection()->setPassword('material@registration12');
+        $active_sheet->getProtection()->setSheet(true);
 
 
         $this->load->model(['material_item_category', 'measurement_unit']);
@@ -1216,17 +1219,35 @@ class Inventory extends MY_Controller
 
         $spreadsheet = new Spreadsheet();
         $active_sheet = $spreadsheet->getActiveSheet();
+        $active_sheet->setTitle('Material Registration');
         $active_sheet->setCellValue('A1', 'UNCATEGORIZED');
         $active_sheet->setCellValue('A2', 'Material Item');
         $active_sheet->setCellValue('B2', 'Measurement Unit');
         $active_sheet->setCellValue('C2', 'Part Number');
         $active_sheet->setCellValue('D2', 'Description');
 
-        $active_sheet->setTitle('Material Registration');
+        //Unprotect Editable Cells
+        $active_sheet->getStyle('A3:D202')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+
+        //Add UOM dropdown options for uncategorized material
+        for ($i = 3; $i <= 202; $i++) {
+
+            $objValidation = $active_sheet->getCell('B' . $i)->getDataValidation();
+            $objValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
+            $objValidation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION);
+            $objValidation->setAllowBlank(false);
+            $objValidation->setShowInputMessage(true);
+            $objValidation->setShowErrorMessage(true);
+            $objValidation->setShowDropDown(true);
+            $objValidation->setErrorTitle('Input error');
+            $objValidation->setError('Value is not in list.');
+            $objValidation->setPromptTitle('Pick from list');
+            $objValidation->setPrompt('Please pick a value from the drop-down list.');
+            $objValidation->setFormula1('"' . $uom_dropdown . '"');
+        }
 
                 $category_column_index = 'E';
                 $category_ids   = $this->serialize_material_item_category_ids($categories);
-
 
                 $category_ids = new RecursiveIteratorIterator(new RecursiveArrayIterator($category_ids));
         
@@ -1244,7 +1265,24 @@ class Inventory extends MY_Controller
                     $category_column_index++;
                     $active_sheet->setCellValue($category_column_index . '1', $category->category_name);
                     $active_sheet->setCellValue($category_column_index . '2', 'Measurement Unit');
-        
+
+                    //Add UOM dropdown options
+                for ($i = 3; $i <= 202; $i++) {
+
+                    $objValidation = $active_sheet->getCell($category_column_index . $i)->getDataValidation();
+                    $objValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
+                    $objValidation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION);
+                    $objValidation->setAllowBlank(false);
+                    $objValidation->setShowInputMessage(true);
+                    $objValidation->setShowErrorMessage(true);
+                    $objValidation->setShowDropDown(true);
+                    $objValidation->setErrorTitle('Input error');
+                    $objValidation->setError('Value is not in list.');
+                    $objValidation->setPromptTitle('Pick from list');
+                    $objValidation->setPrompt('Please pick a value from the drop-down list.');
+                    $objValidation->setFormula1('"' . $uom_dropdown . '"');
+                 }
+   
                     $category_column_index++;
                     $active_sheet->setCellValue($category_column_index . '1', 'LEVEL ' . $category->tree_level);
                     $active_sheet->setCellValue($category_column_index . '2', 'Part Number');
@@ -1252,65 +1290,40 @@ class Inventory extends MY_Controller
                     $active_sheet->setCellValue($category_column_index . '2', 'Description');
         
                     $category_end_column = $category_column_index;
+                    //$category_column_index++;
+
+                    $active_sheet->getStyle($category_start_column . '1:' . $category_end_column . '202')->applyFromArray([
+                        'fill' => [
+                         'type' => Fill::FILL_SOLID,
+                         'color' => ['rgb' => $hex_color],
+                            ]
+                         ]);
+                    $active_sheet->getStyle($category_start_column . '1:' . $category_end_column . '1')->applyFromArray([
+                        'font' => [
+                         'size' => $font_size
+                         ]
+                        ]);
+
+                    $active_sheet->getStyle($category_start_column . '2:' . $category_end_column . '2')->applyFromArray($style['column_title']);
                     $category_column_index++;
 
-                    $category_end_column = $category_column_index;
-            $active_sheet->getStyle($category_start_column . '1:' . $category_end_column . '202')->applyFromArray([
-                'fill' => [
-                    'type' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'color' => ['rgb' => $hex_color],
-                ]
-            ]);
-            $active_sheet->getStyle($category_start_column . '1:' . $category_end_column . '1')->applyFromArray([
-                'font' => [
-                    'size' => $font_size
-                ]
-            ]);
+                    //Unprotect Editable Cells
+                     //$active_sheet->getStyle($category_start_column . '3:' . $category_end_column . '202');
 
-            $active_sheet->getStyle($category_start_column . '2:' . $category_end_column . '2')->applyFromArray($style['column_title']);
-            $category_column_index++;
-
-            //Unprotect Editable Cells
-            $active_sheet->getStyle($category_start_column . '3:' . $category_end_column . '202');
-
+                      //Unprotect Editable Cells
+                     $active_sheet->getStyle($category_start_column . '3:' . $category_end_column . '202')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+ 
                 }
 
                 for ($col_index = 'A'; $col_index !== $category_column_index; $col_index++) {
-                    $active_sheet->getColumnDimension($col_index)->setAutoSize(true);
+                    $active_sheet->getColumnDimension($col_index)->setAutoSize(TRUE);
                 }
 
-        // $category_column_index++;        
-        // $sheet_dimension = $active_sheet->getHighestRowAndColumn();
-
-        //my styles are
-        // $styleArray = array(
-            
-            
-        //     'borders' => [
-        //         'diagonalDirection' => Borders::DIAGONAL_BOTH,
-        //         'allBorders' => [
-        //             'borderStyle' => Border::BORDER_THIN,
-        //         ],
-        //     ],
-        //     'fill' => [
-        //         'fillType' => Fill::FILL_GRADIENT_LINEAR,
-        //         'startColor' => [
-        //             'argb' => 'yellow',
-        //         ],
-        //         'endColor' => [
-        //             'argb' => 'white',
-        //         ],
-        //     ],
-        // );
-        // $spreadsheet->getActiveSheet()->getStyle('A2:ZZ100')->applyFromArray($styleArray);
-        //$spreadsheet->getActiveSheet()->getStyle('F2:I2')->applyFromArray($styleArray);
-        //$spreadsheet->getActiveSheet()->getStyle('J2:M2')->applyFromArray($styleArray);
-        //$spreadsheet->getActiveSheet()->getStyle('N2:')->applyFromArray($styleArray);
-
+      
         $active_sheet->getStyle('A1:' . $category_column_index . '202')->applyFromArray([
             'borders' => array(
                 'allborders' => array(
-                    'style' => PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+                    'style' => Border::BORDER_THIN,
                 )
             )
         ]);
@@ -1328,9 +1341,11 @@ class Inventory extends MY_Controller
         $sheet_dimension = $active_sheet->getHighestRowAndColumn();
 
 
-
         //Freeze the fixed panes
         $active_sheet->freezePane('A3');
+
+        //Unprotect The rate column
+        $active_sheet->getStyle('A:' . $category_column_index)->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
 
         $writer = new Xlsx($spreadsheet);
 
@@ -1339,6 +1354,7 @@ class Inventory extends MY_Controller
         header('Content-Type: application/vnd.ms-excel');
         header('Content-Disposition: attachment;filename="'. $filename .'.xlsx"');
         header('Cache-Control: max-age=0');
+        ob_end_clean();
         $writer->save('php://output');
 
     }
@@ -1393,12 +1409,6 @@ class Inventory extends MY_Controller
         $writer->save('php://output');
 
         // echo inspect_object($categories);
-
-
-
-
-
-
 
 
         // $this->load->model(['material_item_category', 'measurement_unit']);
@@ -1588,6 +1598,9 @@ class Inventory extends MY_Controller
     }
     public function upload_material_registration_excel(){
         
+        // print_r($_FILES['file']['name']);
+        // exit();
+
        $upload_file = $_FILES['file']['name'];
 
       
@@ -1611,7 +1624,12 @@ class Inventory extends MY_Controller
         // exit();
 
         $active_sheet = $spreadsheet->getActiveSheet();
-       
+
+        //echo json_encode($active_sheet);
+        //exit();
+       // $hash = $active_sheet->getProtection()->getPassword(); // returns a hash
+        //$valid = ($hash === \PhpOffice\PhpSpreadsheet\Shared\PasswordHasher::hashPassword('material@registration12'));
+       //if($valid){
             $sheet_dimension = $active_sheet->getHighestRowAndColumn();
 
             $this->load->model(['measurement_unit', 'material_item']);
@@ -1624,11 +1642,11 @@ class Inventory extends MY_Controller
 
             for ($row_index = 3; $row_index <= $sheet_dimension['row']; $row_index++) {
                 $item_name = trim($active_sheet->getCell("A" . $row_index)->getFormattedValue());
-                // echo $item_name;
-                // exit();
+                //echo $item_name;
+                //exit();
                 $symbol = $active_sheet->getCell("B" . $row_index)->getFormattedValue();
                 $uom_id = isset($uom_ids[$symbol]) ? $uom_ids[$symbol] : null;
-                if ($item_name != '' /* && !is_null($uom_id) */) {
+                if ($item_name != '' /*&& !is_null($uom_id)*/ ) {
                     $material_item = new Material_item();
                     $material_item->item_name = $item_name;
                     $material_item->unit_id = $uom_id;
@@ -1643,12 +1661,15 @@ class Inventory extends MY_Controller
 
             $MAX_COL_INDEX = Coordinate::columnIndexFromString($sheet_dimension['column']);
 
-            for ($index = Coordinate::columnIndexFromString('E'); $index < $MAX_COL_INDEX; $index = $index + 5) {
+            //echo json_encode($MAX_COL_INDEX);
+            //exit();
+            for ($index = Coordinate::columnIndexFromString('F'); $index < $MAX_COL_INDEX; $index = $index + 5) {
                 $col = Coordinate::stringFromColumnIndex($index);
                 $uom_col = Coordinate::stringFromColumnIndex($index + 1);
                 $part_number_col = Coordinate::stringFromColumnIndex($index + 2);
                 $description_col = Coordinate::stringFromColumnIndex($index + 3);
                 $category_id = $active_sheet->getCell($col . '1')->getFormattedValue();
+              
 
                 for ($row_index = 3; $row_index <= $sheet_dimension['row']; $row_index++) {
                     $item_name = trim($active_sheet->getCell($col . $row_index)->getFormattedValue());
@@ -1665,7 +1686,7 @@ class Inventory extends MY_Controller
                     }
                 }
             }
-        
+        //}  
 
     }
 

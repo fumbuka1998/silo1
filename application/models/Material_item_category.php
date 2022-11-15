@@ -10,7 +10,7 @@ class Material_item_category extends MY_Model{
     public $parent_category_id;
     public $project_nature_id;
     public $tree_level;
-
+    
 
     public function category_list(){
         $limit = $this->input->post('length');
