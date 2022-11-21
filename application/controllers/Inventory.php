@@ -1,5 +1,8 @@
 <?php
 require 'vendor/autoload.php';
+
+//require_once __DIR__ . '/vendor/autoload.php';
+//$mpdf = new \Mpdf\Mpdf();
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -9,7 +12,10 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Borders;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use \PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Style\Protection;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+
 
 
 class Inventory extends MY_Controller
@@ -1202,14 +1208,14 @@ class Inventory extends MY_Controller
 
         $active_sheet->getStyle('A1:D202')->applyFromArray([
             'fill' => [
-                'type' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'type' => Fill::FILL_SOLID,
                 'color' => ['rgb' => $hex_color],
             ]
         ]);
 
         $style['column_title'] = [
             'fill' => [
-                'type' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'type' => Fill::FILL_SOLID,
                 'color' => ['rgb' => '6fa8dc'],
             ]
         ];
@@ -1227,14 +1233,14 @@ class Inventory extends MY_Controller
         $active_sheet->setCellValue('D2', 'Description');
 
         //Unprotect Editable Cells
-        $active_sheet->getStyle('A3:D202')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+        $active_sheet->getStyle('A3:D202')->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
 
         //Add UOM dropdown options for uncategorized material
         for ($i = 3; $i <= 202; $i++) {
 
             $objValidation = $active_sheet->getCell('B' . $i)->getDataValidation();
-            $objValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
-            $objValidation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION);
+            $objValidation->setType(DataValidation::TYPE_LIST);
+            $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
             $objValidation->setAllowBlank(false);
             $objValidation->setShowInputMessage(true);
             $objValidation->setShowErrorMessage(true);
@@ -1270,8 +1276,8 @@ class Inventory extends MY_Controller
                 for ($i = 3; $i <= 202; $i++) {
 
                     $objValidation = $active_sheet->getCell($category_column_index . $i)->getDataValidation();
-                    $objValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
-                    $objValidation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION);
+                    $objValidation->setType(DataValidation::TYPE_LIST);
+                    $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
                     $objValidation->setAllowBlank(false);
                     $objValidation->setShowInputMessage(true);
                     $objValidation->setShowErrorMessage(true);
@@ -1311,7 +1317,7 @@ class Inventory extends MY_Controller
                      //$active_sheet->getStyle($category_start_column . '3:' . $category_end_column . '202');
 
                       //Unprotect Editable Cells
-                     $active_sheet->getStyle($category_start_column . '3:' . $category_end_column . '202')->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+                     $active_sheet->getStyle($category_start_column . '3:' . $category_end_column . '202')->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
  
                 }
 
@@ -1345,7 +1351,7 @@ class Inventory extends MY_Controller
         $active_sheet->freezePane('A3');
 
         //Unprotect The rate column
-        $active_sheet->getStyle('A:' . $category_column_index)->getProtection()->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
+        $active_sheet->getStyle('A:' . $category_column_index)->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
 
         $writer = new Xlsx($spreadsheet);
 

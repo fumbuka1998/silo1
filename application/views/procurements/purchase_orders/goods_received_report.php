@@ -6,6 +6,7 @@
  * Time: 2:42 PM
  */
 
+ 
     $vendor = $order->stakeholder();
     $location = $order->location();
     $project = $order->project();

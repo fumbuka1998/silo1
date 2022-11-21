@@ -22,6 +22,8 @@ class Procurements extends CI_Controller
         }
     }
 
+
+    
     public function purchase_orders($orders_for = null, $holder_id = null)
     {
         $limit = $this->input->post('length');
@@ -44,6 +46,7 @@ class Procurements extends CI_Controller
             $this->load->view('procurements/purchase_orders/index', $data);
         }
     }
+
 
     public function save_purchase_order()
     {

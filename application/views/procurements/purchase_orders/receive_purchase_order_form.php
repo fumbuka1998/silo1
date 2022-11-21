@@ -128,6 +128,7 @@ $vat_factor = $order->vat_percentage /100;
                                                     <?php
                                                 }
                                             }
+                                            
                                         } else {
                                             $items = $grn->material_items();
                                             $total_amount = $foreign_total_amount = 0;
